@@ -33,12 +33,13 @@ class VoteEventProcessor @Inject()(implicit ec: ExecutionContext) extends Cassan
   private def prepareCreateTables(session: CassandraSession) = {
     session.executeCreateTable(
       "CREATE TABLE IF NOT EXISTS vote ("
-        + "voteId text, documentId text, voteAs int"
-        + "PRIMARY KEY (voteId, documentId))")
+        + "docId text, userId text, voted int, visited timestamp, "
+        + "PRIMARY KEY (docId, userId))")
   }
 
   private def prepareWriteFollowers(session: CassandraSession) = {
-    val statement = session.prepare("INSERT INTO vote (voteId, documentId, votedAs) VALUES (?, ?, ?)")
+    val statement = session.prepare("INSERT INTO vote (docId, userId, voted, visited) " +
+      "VALUES (?, ?, ?, ?)")
     statement.map(ps => {
       setWriteFollowers(ps)
       Done
@@ -51,12 +52,12 @@ class VoteEventProcessor @Inject()(implicit ec: ExecutionContext) extends Cassan
   }
 
   private def processVoteChanged(event: VoteAdded, offset: UUID) = {
-    val bindWriteFollowers = writeVotes.bind()
-    bindWriteFollowers.setString("voteId", event.voteId)
-    bindWriteFollowers.setString("documentId", event.documentId)
-    bindWriteFollowers.setInt("votedAs", event.votedAs)
-    val bindWriteOffset = writeOffset.bind(offset)
-    completedStatements(Seq(bindWriteFollowers, bindWriteOffset).asJava)
+    val bindWriteVotes = writeVotes.bind()
+    bindWriteVotes.setString("docId", event.docId)
+    bindWriteVotes.setString("userId", event.userId)
+    bindWriteVotes.setInt("voted", event.voted)
+    bindWriteVotes.setTimestamp("visited", event.visited)
+    completedStatements(Seq(bindWriteVotes).asJava)
   }
 
 }
