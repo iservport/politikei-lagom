@@ -20,15 +20,15 @@ class VotingServiceImpl @Inject() (persistentEntities: PersistentEntityRegistry)
 
   override def castVote(): ServiceCall[Vote, NotUsed] = {
     request =>
-      persistentEntities(request.userId).ask[Done, CastVote](CastVote())
+      voteEntityRef(request.docId).ask[Done, CastVote](CastVote(request))
   }
 
   /**
     * Commands are sent to [[VoteEntity]] using a `PersistentEntityRef`.
     *
-    * @param voteId
+    * @param docId
     */
-  private def voteEntityRef(voteId: String) =
-    persistentEntities.refFor(classOf[VoteEntity], voteId)
+  private def voteEntityRef(docId: String) =
+    persistentEntities.refFor(classOf[VoteEntity], docId)
 
 }

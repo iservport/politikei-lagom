@@ -7,6 +7,24 @@ version := "1.0"
 
 scalaVersion in ThisBuild := "2.11.8"
 
+lazy val userApi = project("user-api")
+  .settings(
+    version := "1.0-SNAPSHOT",
+    libraryDependencies += lagomJavadslApi
+  )
+
+lazy val userImpl = project("user-impl")
+  .enablePlugins(LagomJava)
+  .settings(
+    version := "1.0-SNAPSHOT",
+    libraryDependencies ++= Seq(
+      lagomJavadslPersistence,
+      lagomJavadslTestKit
+    )
+  )
+  .settings(lagomForkedTestSettings: _*)
+  .dependsOn(userApi, utils)
+
 lazy val voteApi = project("vote-api")
   .settings(
     version := "1.0-SNAPSHOT",
